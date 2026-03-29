@@ -6,9 +6,15 @@ import { supabase } from "@/lib/supabase";
 export default function LuxuryBookingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [existingReservations, setExistingReservations] = useState<any[]>([]);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     fetchReservations();
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   const fetchReservations = async () => {
@@ -82,6 +88,12 @@ export default function LuxuryBookingForm() {
 
   return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 selection:bg-[#D4AF37]/30">
+      <div
+        className="pointer-events-none fixed inset-0 z-0 transition-opacity duration-300"
+        style={{
+          background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(212, 175, 55, 0.07), transparent 40%)`,
+        }}
+      />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#D4AF37]/5 rounded-full blur-[150px] pointer-events-none" />
 
       <div className="relative w-full max-w-[650px]">
