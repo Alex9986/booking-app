@@ -40,28 +40,31 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJh...... (your long anon key)
 Run the following SQL in your Supabase SQL Editor to set up the reservations table and Row Level Security (RLS).
 
 ```bash
--- Create a table for reservations
+-- 1. Delete the existing table and all its data
+drop table if exists reservations;
+
+-- 2. Create the refined table without the status column
 create table reservations (
   id uuid default gen_random_uuid() primary key,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   name text not null,
   phone text not null,
   booking_date date not null,
+  booking_time text not null,
   guest_count text not null,
-  special_requests text,
-  status text default 'pending' -- Useful for high-end concierge management
+  special_requests text
 );
 
--- Enable Row Level Security (RLS)
+-- 3. Security: Enable Row Level Security
 alter table reservations enable row level security;
 
--- Policy: Allow public inserts for the booking form
-create policy "Enable insert for all users" on reservations
+-- 4. Policy: Allow anyone to book (Insert)
+create policy "Allow public inserts" on reservations
 for insert with check (true);
 
--- Policy: Restrict reading to authenticated users
-create policy "Enable read for authenticated users only" on reservations
-for select using (auth.role() = 'authenticated');
+-- 5. Policy: Allow you to view bookings (Select)
+create policy "Allow public selects for testing" on reservations
+for select using (true);
 ```
 
 Supabase Client Configuration `lib/supabase.ts`
