@@ -43,12 +43,14 @@ Run the following SQL in your Supabase SQL Editor to set up the reservations tab
 -- 1. Delete the existing table and all its data
 drop table if exists reservations;
 
--- 2. Create the refined table without the status column
+-- 2. Create the refined table with Email and Occasion fields
 create table reservations (
   id uuid default gen_random_uuid() primary key,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   name text not null,
+  email text not null,          -- New field for confirmations
   phone text not null,
+  occasion text,               -- New field for special events
   booking_date date not null,
   booking_time text not null,
   guest_count text not null,

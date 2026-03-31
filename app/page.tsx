@@ -25,6 +25,7 @@ export default function LuxuryBookingForm() {
     if (error) {
       console.error("Error fetching data:", error.message);
     } else {
+      console.log(data);
       setExistingReservations(data || []);
     }
   };
@@ -55,6 +56,8 @@ export default function LuxuryBookingForm() {
       const reservationData = {
         name: formData.get("name"),
         phone: formData.get("phone"),
+        email: formData.get("email"),
+        occasion: formData.get("occasion"),
         booking_date: formData.get("date"),
         booking_time: formData.get("time"),
         guest_count: formData.get("guests"),
@@ -86,6 +89,9 @@ export default function LuxuryBookingForm() {
     return `${displayHour}:00 ${suffix}`;
   });
 
+  const inputClasses =
+    "w-full bg-transparent border-b border-zinc-800 py-2 text-zinc-200 focus:outline-none focus:border-[#D4AF37] transition-all font-light autofill:shadow-[inset_0_0_0px_1000px_#09090b] autofill:text-fill-zinc-200";
+
   return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 selection:bg-[#D4AF37]/30">
       <div
@@ -94,7 +100,6 @@ export default function LuxuryBookingForm() {
           background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(212, 175, 55, 0.07), transparent 40%)`,
         }}
       />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#D4AF37]/5 rounded-full blur-[150px] pointer-events-none" />
 
       <div className="relative w-full max-w-[650px]">
         <div className="relative z-10 bg-zinc-900/40 backdrop-blur-2xl border border-[#D4AF37]/20 p-8 md:p-12 shadow-[0_25px_60px_rgba(0,0,0,0.6)]">
@@ -111,7 +116,7 @@ export default function LuxuryBookingForm() {
           </header>
 
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Name & Phone */}
+            {/* Row 1: Name & Phone */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="group relative">
                 <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-[#D4AF37] transition-colors">
@@ -121,7 +126,7 @@ export default function LuxuryBookingForm() {
                   type="text"
                   name="name"
                   required
-                  className="w-full bg-transparent border-b border-zinc-800 py-2 text-zinc-200 focus:outline-none focus:border-[#D4AF37] transition-all font-light"
+                  className={inputClasses}
                 />
               </div>
               <div className="group relative">
@@ -132,12 +137,52 @@ export default function LuxuryBookingForm() {
                   type="tel"
                   name="phone"
                   required
-                  className="w-full bg-transparent border-b border-zinc-800 py-2 text-zinc-200 focus:outline-none focus:border-[#D4AF37] transition-all font-light"
+                  className={inputClasses}
                 />
               </div>
             </div>
 
-            {/* Date, Time, & Guests (Three Column) */}
+            {/* Row 2: Email & Occasion */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="group relative">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-[#D4AF37] transition-colors">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  name="email"
+                  required
+                  className={inputClasses}
+                />
+              </div>
+              <div className="group relative">
+                <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-[#D4AF37] transition-colors">
+                  Occasion Type
+                </label>
+                <select
+                  name="occasion"
+                  className="w-full bg-transparent border-b border-zinc-800 py-2 text-zinc-200 focus:outline-none focus:border-[#D4AF37] transition-all font-light appearance-none cursor-pointer"
+                >
+                  <option value="None" className="bg-zinc-950">
+                    None
+                  </option>
+                  <option value="Birthday" className="bg-zinc-950">
+                    Birthday
+                  </option>
+                  <option value="Anniversary" className="bg-zinc-950">
+                    Anniversary
+                  </option>
+                  <option value="Business" className="bg-zinc-950">
+                    Business Meeting
+                  </option>
+                  <option value="Date" className="bg-zinc-950">
+                    Date Night
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            {/* Row 3: Date, Time, & Guests */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="group relative">
                 <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-[#D4AF37] transition-colors">
@@ -147,10 +192,9 @@ export default function LuxuryBookingForm() {
                   type="date"
                   name="date"
                   required
-                  className="w-full bg-transparent border-b border-zinc-800 py-2 text-zinc-200 focus:outline-none focus:border-[#D4AF37] transition-all font-light"
+                  className="w-full bg-transparent border-b border-zinc-800 py-2 text-zinc-200 focus:outline-none focus:border-[#D4AF37] transition-all font-light [color-scheme:dark]"
                 />
               </div>
-
               <div className="group relative">
                 <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-[#D4AF37] transition-colors">
                   Time Slot
@@ -167,7 +211,6 @@ export default function LuxuryBookingForm() {
                   ))}
                 </select>
               </div>
-
               <div className="group relative">
                 <label className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 group-focus-within:text-[#D4AF37] transition-colors">
                   Guests
