@@ -25,7 +25,6 @@ export default function LuxuryBookingForm() {
     if (error) {
       console.error("Error fetching data:", error.message);
     } else {
-      console.log(data);
       setExistingReservations(data || []);
     }
   };
