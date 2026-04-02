@@ -5,11 +5,13 @@ import { supabase } from "@/lib/supabase";
 
 export default function LuxuryBookingForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [existingReservations, setExistingReservations] = useState<any[]>([]);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [notification, setNotification] = useState<{
+    msg: string;
+    type: "error" | "success";
+  } | null>(null);
 
   useEffect(() => {
-    fetchReservations();
     const handleMouseMove = (e: MouseEvent) => {
       setMousePos({ x: e.clientX, y: e.clientY });
     };
@@ -17,16 +19,9 @@ export default function LuxuryBookingForm() {
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
-  const fetchReservations = async () => {
-    const { data, error } = await supabase
-      .from("reservations")
-      .select("booking_date, booking_time");
-
-    if (error) {
-      console.error("Error fetching data:", error.message);
-    } else {
-      setExistingReservations(data || []);
-    }
+  const showMessage = (msg: string, type: "error" | "success" = "error") => {
+    setNotification({ msg, type });
+    setTimeout(() => setNotification(null), 5000);
   };
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -37,45 +32,50 @@ export default function LuxuryBookingForm() {
     const selectedDate = formData.get("date") as string;
     const selectedTime = formData.get("time") as string;
 
-    const isConflict = existingReservations.some(
-      (res) =>
-        res.booking_date === selectedDate && res.booking_time === selectedTime,
-    );
-
-    if (isConflict) {
-      alert(
-        "This time slot is already reserved. Please select another time or date.",
-      );
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
-      const formData = new FormData(e.currentTarget);
+      // 1. DIRECT DATABASE CHECK
+      const { data: conflict, error: checkError } = await supabase
+        .from("reservations")
+        .select("id")
+        .eq("booking_date", selectedDate)
+        .eq("booking_time", selectedTime);
+
+      if (checkError) throw checkError;
+
+      // 2. Check if any rows were returned
+      if (conflict && conflict.length > 0) {
+        showMessage(
+          "This time slot is already reserved. Please select another.",
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 3. PROCEED WITH INSERT
       const reservationData = {
         name: formData.get("name"),
         phone: formData.get("phone"),
         email: formData.get("email"),
         occasion: formData.get("occasion"),
-        booking_date: formData.get("date"),
-        booking_time: formData.get("time"),
+        booking_date: selectedDate,
+        booking_time: selectedTime,
         guest_count: formData.get("guests"),
         special_requests: formData.get("requests"),
       };
 
-      const { error } = await supabase
+      const { error: insertError } = await supabase
         .from("reservations")
         .insert([reservationData]);
 
-      if (error) {
-        console.error("Error:", error.message);
-        alert("Selection unavailable. Please try another slot.");
+      if (insertError) {
+        alert("Selection unavailable. It may have just been taken.");
       } else {
-        alert("Reservation Request Received.");
+        showMessage("Reservation Request Received.", "success");
         (e.target as HTMLFormElement).reset();
       }
     } catch (err) {
       console.error(err);
+      alert("An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -99,6 +99,28 @@ export default function LuxuryBookingForm() {
           background: `radial-gradient(600px circle at ${mousePos.x}px ${mousePos.y}px, rgba(212, 175, 55, 0.07), transparent 40%)`,
         }}
       />
+
+      {notification && (
+        <div className="fixed top-10 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-top-4 duration-300">
+          <div
+            className={`px-8 py-4 backdrop-blur-xl border ${
+              notification.type === "error"
+                ? "border-red-900/50 bg-red-950/20 text-red-200"
+                : "border-[#D4AF37]/50 bg-zinc-900/80 text-[#D4AF37]"
+            } shadow-2xl flex items-center gap-4`}
+          >
+            <span className="text-[10px] tracking-[0.3em] uppercase">
+              {notification.msg}
+            </span>
+            <button
+              onClick={() => setNotification(null)}
+              className="opacity-50 hover:opacity-100"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="relative w-full max-w-[650px]">
         <div className="relative z-10 bg-zinc-900/40 backdrop-blur-2xl border border-[#D4AF37]/20 p-8 md:p-12 shadow-[0_25px_60px_rgba(0,0,0,0.6)]">
