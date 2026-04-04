@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
     const { error } = await resend.emails.send({
       from: `L'Atelier <${FROM_EMAIL}>`,
-      to: email,
+      to: "keshang9986@gmail.com", // 写死了，不管用户填什么都发这里 上线以后改成email就好
       subject: `Reservation Confirmed – ${booking_date} at ${booking_time}`,
       html: ReservationConfirmationEmail({
         name,
