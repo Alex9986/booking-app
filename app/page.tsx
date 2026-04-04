@@ -33,7 +33,7 @@ export default function LuxuryBookingForm() {
     const selectedTime = formData.get("time") as string;
 
     try {
-      // 1. DIRECT DATABASE CHECK
+      // 1. Check for conflicts
       const { data: conflict, error: checkError } = await supabase
         .from("reservations")
         .select("id")
@@ -42,7 +42,6 @@ export default function LuxuryBookingForm() {
 
       if (checkError) throw checkError;
 
-      // 2. Check if any rows were returned
       if (conflict && conflict.length > 0) {
         showMessage(
           "This time slot is already reserved. Please select another.",
@@ -51,31 +50,44 @@ export default function LuxuryBookingForm() {
         return;
       }
 
-      // 3. PROCEED WITH INSERT
+      // 2. Build reservation payload
       const reservationData = {
-        name: formData.get("name"),
-        phone: formData.get("phone"),
-        email: formData.get("email"),
-        occasion: formData.get("occasion"),
+        name: formData.get("name") as string,
+        phone: formData.get("phone") as string,
+        email: formData.get("email") as string,
+        occasion: formData.get("occasion") as string,
         booking_date: selectedDate,
         booking_time: selectedTime,
-        guest_count: formData.get("guests"),
-        special_requests: formData.get("requests"),
+        guest_count: formData.get("guests") as string,
+        special_requests: formData.get("requests") as string,
       };
 
+      // 3. Insert into Supabase
       const { error: insertError } = await supabase
         .from("reservations")
         .insert([reservationData]);
 
       if (insertError) {
-        alert("Selection unavailable. It may have just been taken.");
-      } else {
-        showMessage("Reservation Request Received.", "success");
-        (e.target as HTMLFormElement).reset();
+        showMessage("Selection unavailable. It may have just been taken.");
+        return;
       }
+
+      // 4. Send confirmation email to guest (non-blocking)
+      try {
+        await fetch("/api/send-confirmation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(reservationData),
+        });
+      } catch (emailErr) {
+        console.warn("Email notification failed:", emailErr);
+      }
+
+      showMessage("Reservation Request Received.", "success");
+      (e.target as HTMLFormElement).reset();
     } catch (err) {
       console.error(err);
-      alert("An error occurred. Please try again.");
+      showMessage("An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
